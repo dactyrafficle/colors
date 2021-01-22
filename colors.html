@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+
+
+<style>
+
+html, body {
+ font-family: calibri;
+}
+.table {
+ display: table;
+}
+.row {
+ display: table-row-group;
+}
+.cell {
+ display: table-cell;
+ padding: 3px;
+ border-bottom: 1px solid #999;
+ border-right: 1px solid #999;
+}
+.row:nth-child(1) .cell {
+ border-top: 1px solid #999;
+}
+.cell:nth-child(1) {
+ border-left: 1px solid #999;
+}
+.section {
+ margin: 5px;
+}
+canvas {
+ border: 1px solid #ddd;
+}
+
+</style>
+
+<body>
+
+<div class='section'>
+
+<div class='table'>
+ <div class='row'>
+  <div class='cell'>Desc</div>
+  <div class='cell'>Range</div>
+  <div class='cell'>a2</div>
+  <div class='cell'>Value</div>
+ </div>
+ <div class='row'>
+  <div class='cell'>Hue</div>
+  <div class='cell'>[0, 360)</div>
+  <div class='cell'><input class="myInputs" type="range" min="0" max="360" value="74" id="slider_input_H"></div>
+  <div class='cell'><input class="myInputs" type="number" min="0" max="360" value="74" id="input_H"></div>
+ </div>
+ <div class='row'>
+  <div class='cell'>Saturation</div>
+  <div class='cell'>[0, 1)</div>
+  <div class='cell'><input class="myInputs" type="range" min="0" max="100" value="85" id="slider_input_S"></div>
+  <div class='cell'><input class="myInputs" type="number" step='0.01' min="0" max="1" value="0.85" id="input_S"></div>
+ </div>
+ <div class='row'>
+  <div class='cell'>Lightness</div>
+  <div class='cell'>[0, 1)</div>
+  <div class='cell'><input class="myInputs" type="range" min="0" max="100" value="62" id="slider_input_L"></div>
+  <div class='cell'><input class="myInputs" type="number" step='0.01' min="0" max="1" value="0.62" id="input_L"></div>
+ </div>
+ <div class='row'>
+  <div class='cell'>T0</div>
+  <div class='cell'>[0, 1)</div>
+  <div class='cell'><input class="myInputs" type="range" min="0" max="100" value="45" id="slider_input_T0"></div>
+  <div class='cell'><input class="myInputs" type="number" step='0.01' min="0" max="1" value="0.45" id="input_T0"></div>
+ </div>
+ <div class='row'>
+  <div class='cell'>T1</div>
+  <div class='cell'>[0, 1)</div>
+  <div class='cell'><input class="myInputs" type="range" min="0" max="100" value="45" id="slider_input_T1"></div>
+  <div class='cell'><input class="myInputs" type="number" step='0.01' min="0" max="1" value="0.45" id="input_T1"></div>
+ </div>
+</div>
+
+</div>
+
+<div class='section'>
+ <div id='container'></div>
+</div>
+
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.16/p5.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.16/addons/p5.dom.min.js"></script>
+
+<script>
+
+let obj = {};
+
+function getT_values(S, L, x) {
+  let t0, t1;
+  if (L < 0.5) {
+    t0 = L * (1 + S);
+  } else {
+    t0 = L + S - L*S;
+  }
+  t1 = 2*L - t0;
+  
+  if (x === "t0") {
+    return t0;
+  }
+  if (x === "t1") {
+    return t1;
+  }  
+}
+
+window.onload = function() {
+
+ let slider_input_H_el = document.getElementById("slider_input_H");
+ let slider_input_S_el = document.getElementById("slider_input_S");
+ let slider_input_L_el = document.getElementById("slider_input_L");
+ let slider_input_T0_el = document.getElementById("slider_input_T0");
+ let slider_input_T1_el = document.getElementById("slider_input_T1");
+ 
+ let input_H_el = document.getElementById("input_H");
+ let input_S_el = document.getElementById("input_S");
+ let input_L_el = document.getElementById("input_L");
+ let input_T0_el = document.getElementById("input_T0");
+ let input_T1_el = document.getElementById("input_T1");
+
+ // initial values 
+ //let obj = {};
+ obj.H = parseFloat(slider_input_H_el.value);
+ obj.S = parseFloat(slider_input_S_el.value)/100;
+ obj.L = parseFloat(slider_input_L_el.value)/100;
+ obj.T0 = getT_values(obj.S, obj.L, "t0");
+ obj.T1 = getT_values(obj.S, obj.L, "t1");
+ obj.H_pct = obj.H/360;
+
+
+ slider_input_T0_el.value = obj.T0*100;
+ slider_input_T1_el.value = obj.T1*100; 
+
+ input_H_el.value = obj.H;
+ input_S_el.value = obj.S;
+ input_L_el.value = obj.L;
+ input_T0_el.value = obj.T0;
+ input_T1_el.value = obj.T1;
+ 
+ let rgb = hsl2Rgb(obj.H_pct, obj.S, obj.L);
+ obj.R = rgb.r*255;
+ obj.G = rgb.g*255;
+ obj.B = rgb.b*255;
+ console.log(obj);
+
+ 
+ // HUE
+ slider_input_H_el.addEventListener('input', function() {
+   input_H_el.value = this.value;
+   obj.H = parseFloat(this.value);
+   obj.H_pct = obj.H/360;
+   console.log(obj);
+ })
+ input_H_el.addEventListener('input', function() {
+   if (this.value > 360) {
+     this.value = 360;
+   }
+   if (this.value < 0) {
+     this.value = 0;
+   }
+   slider_input_H_el.value = this.value;
+   obj.H = parseFloat(this.value);
+   obj.H_pct = obj.H/360;
+   console.log(obj);
+ });
+ 
+ // SATURATION
+ slider_input_S_el.addEventListener('input', function() {
+   input_S_el.value = this.value/100;
+   
+   // recalc T0 and T1
+   let s_ = parseFloat(input_S_el.value);
+   let l_ = parseFloat(input_L_el.value);
+   let t0_ = getT_values(s_, l_, "t0");
+   let t1_ = getT_values(s_, l_, "t1");
+   
+   slider_input_T0_el.value = t0_*100;
+   slider_input_T1_el.value = t1_*100;
+   input_T0_el.value = t0_;
+   input_T1_el.value = t1_;
+   
+   obj.S = parseFloat(s_);
+   obj.L = parseFloat(l_);
+   obj.T0 = parseFloat(t0_);
+   obj.T1 = parseFloat(t1_);   
+   console.log(obj);   
+   
+ })
+ input_S_el.addEventListener('input', function() {
+   if (this.value > 1) {
+     this.value = 1;
+   }
+   if (this.value < 0) {
+     this.value = 0;
+   }
+   slider_input_S_el.value = this.value*100;
+   
+   // recalc T0 and T1
+   let s_ = parseFloat(input_S_el.value);
+   let l_ = parseFloat(input_L_el.value);
+   let t0_ = getT_values(s_, l_, "t0");
+   let t1_ = getT_values(s_, l_, "t1");
+   
+   slider_input_T0_el.value = t0_*100;
+   slider_input_T1_el.value = t1_*100;
+   input_T0_el.value = t0_;
+   input_T1_el.value = t1_;
+   
+   obj.S = parseFloat(s_);
+   obj.L = parseFloat(l_);
+   obj.T0 = parseFloat(t0_);
+   obj.T1 = parseFloat(t1_);   
+   console.log(obj);
+   
+ });
+
+ // LIGHTNESS
+ slider_input_L_el.addEventListener('input', function() {
+   input_L_el.value = this.value/100;
+   
+   // recalc T0 and T1
+   let s_ = parseFloat(input_S_el.value);
+   let l_ = parseFloat(input_L_el.value);
+   let t0_ = getT_values(s_, l_, "t0");
+   let t1_ = getT_values(s_, l_, "t1");
+   
+   slider_input_T0_el.value = t0_*100;
+   slider_input_T1_el.value = t1_*100;
+   input_T0_el.value = t0_;
+   input_T1_el.value = t1_;
+   
+   obj.S = parseFloat(s_);
+   obj.L = parseFloat(l_);
+   obj.T0 = parseFloat(t0_);
+   obj.T1 = parseFloat(t1_);   
+   console.log(obj);   
+ })
+ input_L_el.addEventListener('input', function() {
+   if (this.value > 1) {
+     this.value = 1;
+   }
+   if (this.value < 0) {
+     this.value = 0;
+   }
+   slider_input_L_el.value = this.value*100;
+   
+   // recalc T0 and T1
+   let s_ = parseFloat(input_S_el.value);
+   let l_ = parseFloat(input_L_el.value);
+   let t0_ = getT_values(s_, l_, "t0");
+   let t1_ = getT_values(s_, l_, "t1");
+   
+   slider_input_T0_el.value = t0_*100;
+   slider_input_T1_el.value = t1_*100;
+   input_T0_el.value = t0_;
+   input_T1_el.value = t1_;
+
+   obj.S = parseFloat(s_);
+   obj.L = parseFloat(l_);
+   obj.T0 = parseFloat(t0_);
+   obj.T1 = parseFloat(t1_);   
+   console.log(obj); 
+ });
+
+
+
+
+
+}
+
+
+ // the animation
+ let w = 1000;
+ let h = 500;
+
+ let y0 = 100;
+ let y1 = h-y0;
+ let dy = y1-y0;
+ let y_range = dy;
+ 
+ let x0 = 120;
+ let x1 = 720;
+ let dx = 100;
+ let x_range = 600;
+
+ // initial values
+ let t0 = y0;
+ let t1 = y1;
+ let dt = (y1-y0)/100;
+ let t_range = t1-t0;
+ 
+ let y0_colorBar = 35;
+
+ function setup() {
+  let c = createCanvas(1000, 500);
+  c.parent('container');
+
+ }
+ 
+ function draw() {
+  background(255);
+  
+  let rgb = hsl2Rgb(obj.H_pct, obj.S, obj.L);
+  obj.R = rgb.r*255;
+  obj.G = rgb.g*255;
+  obj.B = rgb.b*255;
+  
+  // color bar
+  colorMode(HSL, 100);
+  noStroke();
+  for (let i = x0; i < x1; i+=4) {
+   fill((i-x0)/x_range*100, obj.S*100, obj.L*100);
+   rect(i, y0_colorBar, 4, 30);
+  }
+  
+  colorMode(RGB, 255);
+  stroke(204);
+  strokeWeight(1);
+  noFill();
+  rect(x0, y0_colorBar, x_range, 30);
+ 
+  t0 = y0 + (1-obj.T0)*dy;
+  t1 = y0 + (1-obj.T1)*dy;
+  dt = (t1-t0)/100;
+  t_range = t1-t0;
+  
+  textAlign(LEFT, CENTER);
+  strokeWeight(1);
+  textSize(14);
+  stroke(0);
+  text("y0 = 1", 5, y0);
+  text("y1 = 0", 5, y1);
+  text("t0", 70, t0);
+  text("t1", 90, t1);
+  
+  text("255", x1+90, y0);
+  text("  0", x1+90, y1);
+  
+  strokeWeight(1);
+  stroke(255, 0, 0);
+  text(round(rgb.r*255), x1+15, y1-rgb.r*y_range);
+  stroke(0, 255, 0);
+  text(round(rgb.g*255), x1+40, y1-rgb.g*y_range);
+  stroke(0, 0, 255);
+  text(round(rgb.b*255), x1+65, y1-rgb.b*y_range);
+  //text("  0", x1+40, y1);
+  
+  strokeWeight(1);
+  stroke(204, 204, 204);
+  line(x0, y0, x1, y0);
+  line(x0, y1, x1, y1);
+  for (let i = 0; i < 6; i++) {
+    line(x0+i*dx, y0, x0+i*dx, y1);
+  }
+  line(x0+dx*6, y0, x0+dx*6, y1);
+  
+  stroke(255, 0, 0);
+  line(x0+dx*0, t0, x0+dx*1, t0);
+  line(x0+dx*1, t0, x0+dx*2, t1);  
+  line(x0+dx*2, t1, x0+dx*3, t1);
+  line(x0+dx*3, t1, x0+dx*4, t1);
+  line(x0+dx*4, t1, x0+dx*5, t0);
+  line(x0+dx*5, t0, x0+dx*6, t0);
+
+  stroke(0, 255, 0);
+  line(x0+dx*0, t1, x0+dx*1, t0);
+  line(x0+dx*1, t0, x0+dx*2, t0);
+  line(x0+dx*2, t0, x0+dx*3, t0);
+  line(x0+dx*3, t0, x0+dx*4, t1);
+  line(x0+dx*4, t1, x0+dx*5, t1); 
+  line(x0+dx*5, t1, x0+dx*6, t1);
+  
+  stroke(0, 0, 255);
+  line(x0+dx*2, t1, x0+dx*3, t0);
+  line(x0+dx*3, t0, x0+dx*4, t0);
+  line(x0+dx*4, t0, x0+dx*5, t0);
+  line(x0+dx*5, t0, x0+dx*6, t1);
+  line(x0+dx*0, t1, x0+dx*1, t1); 
+  line(x0+dx*1, t1, x0+dx*2, t1);
+  
+
+  
+  stroke(obj.R, obj.G, obj.B);
+  strokeWeight(2);
+  line(x0+x_range*obj.H_pct, y0_colorBar+2, x0+x_range*obj.H_pct, y1);
+
+  let r = 7;
+
+
+
+
+
+
+
+   stroke(255, 0, 0);
+   fill(255, 0, 0);
+   ellipse(x0+x_range*obj.H_pct, y1-y_range*rgb.r, r*2, r*2);
+   
+
+   stroke(0, 255, 0);
+   fill(0, 255, 0);
+   ellipse(x0+x_range*obj.H_pct, y1-y_range*rgb.g, r*2, r*2);
+
+   stroke(0, 0, 255);
+   fill(0, 0, 255);
+   ellipse(x0+x_range*obj.H_pct, y1-y_range*rgb.b, r*2, r*2);
+  
+
+
+ }
+
+
+// this isn't my function
+// https://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion the top answer
+function hsl2Rgb(h, s, l){
+    var r, g, b;
+
+    if(s == 0){
+        r = g = b = l; // achromatic
+    }else{
+        var hue2rgb = function hue2rgb(p, q, t){
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        }
+
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        var p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return {
+     'r': r,
+     'g': g,
+     'b': b
+    };
+}
+
+</script>
+
+</html>
