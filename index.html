@@ -16,14 +16,14 @@ html, body {
 .cell {
  display: table-cell;
  padding: 3px;
- border-bottom: 1px solid #999;
- border-right: 1px solid #999;
+ border-bottom: 1px solid #ddd;
+ border-right: 1px solid #ddd;
 }
 .row:nth-child(1) .cell {
- border-top: 1px solid #999;
+ border-top: 1px solid #ddd;
 }
 .cell:nth-child(1) {
- border-left: 1px solid #999;
+ border-left: 1px solid #ddd;
 }
 .section {
  margin: 5px;
@@ -36,6 +36,9 @@ input {
  vertical-align: middle;
 }
 
+.inner-table {
+ padding: 10px;
+}
 
 </style>
 
@@ -43,7 +46,12 @@ input {
 
 <div class='section'>
 
+
 <div class='table'>
+ <div class='row'>
+  <div class='cell'>
+
+<div class='table inner-table'>
  <div class='row'>
   <div class='cell'>Desc</div>
   <div class='cell'>Range</div>
@@ -83,6 +91,27 @@ input {
 </div>
 
 </div>
+<div class='cell'>
+
+<br><br>
+<div class='table inner-table'>
+ <div class='row'>
+  <div class='cell' style='width: 200px;'><div id='color_box' style='margin: auto; border: 1px solid #ddd; height: 40px; width: 40px;'></div></div>
+ </div>
+ <div class='row'>
+  <div class='cell' id='hsl_reported' style='margin: auto; text-align: center;'>RGB</div>
+ </div>
+ <div class='row'>
+  <div class='cell' id='rgb_reported' style='margin: auto; text-align: center;'>RGB</div>
+ </div>
+
+</div>
+
+</div> <!-- closing cell -->
+</div>  <!-- closing row -->
+</div> <!-- closing big table -->
+
+</div> <!-- closing section -->
 
 <div class='section'>
  <div id='container'></div>
@@ -96,6 +125,9 @@ input {
 <script>
 
 let obj = {};
+let hsl_reported = document.getElementById('hsl_reported');
+let rgb_reported = document.getElementById('rgb_reported');
+let color_box = document.getElementById('color_box');
 
 function getT_values(S, L, x) {
   let t0, t1;
@@ -137,6 +169,8 @@ window.onload = function() {
  obj.T1 = getT_values(obj.S, obj.L, "t1");
  obj.H_pct = obj.H/360;
 
+ 
+
 
  slider_input_T0_el.value = obj.T0*100;
  slider_input_T1_el.value = obj.T1*100; 
@@ -152,7 +186,10 @@ window.onload = function() {
  obj.G = rgb.g*255;
  obj.B = rgb.b*255;
  console.log(obj);
-
+ 
+ hsl_reported.innerHTML = "<strong>HSL</strong>(" + Math.floor(obj.H) + ", " + Math.floor(obj.S*100)/1 + "%, " + Math.floor(obj.L*100)/1 + "%)";
+ rgb_reported.innerHTML = "<strong>RGB</strong>(" + Math.floor(obj.R*10)/10 + ", " + Math.floor(obj.G*10)/10 + ", " + Math.floor(obj.B*10)/10 + ")";
+ color_box.style.backgroundColor = "rgb(" + obj.R + "," + obj.G + "," + obj.B + ")";
  
  // HUE
  slider_input_H_el.addEventListener('input', function() {
@@ -273,6 +310,16 @@ window.onload = function() {
  });
 
 
+ let myInputs = document.getElementsByClassName('myInputs');
+ for (let i = 0; i < myInputs.length; i++) {
+   myInputs[i].addEventListener('input', function() {
+      hsl_reported.innerHTML = "<strong>HSL</strong>(" + Math.floor(obj.H) + ", " + Math.floor(obj.S*100)/1 + "%, " + Math.floor(obj.L*100)/1 + "%)";
+      let rgb2 = hsl2Rgb(obj.H_pct, obj.S, obj.L);
+      rgb_reported.innerHTML = "<strong>RGB</strong>(" + Math.floor(rgb2.r*255*10)/10 + ", " + Math.floor(rgb2.g*255*10)/10 + ", " + Math.floor(rgb2.b*255*10)/10 + ")";
+      color_box.style.backgroundColor = "rgb(" + rgb2.r*255 + "," + rgb2.g*255 + "," + rgb2.b*255 + ")";
+      
+   });
+ }
 
 
 
